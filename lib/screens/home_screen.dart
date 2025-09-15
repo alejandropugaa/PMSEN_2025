@@ -1,65 +1,101 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:dot_navigation_bar/dot_navigation_bar.dart';
-import 'package:pmsen_2025/utils/value_listener.dart';
+import 'package:pmsen_2025/utils/value_listener.dart'; // Asume que esta ruta es correcta
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: HomeScreen(),
-    );
-  }
-}
+// NUEVOS IMPORTS
+import 'package:translucent_navigation_bar/translucent_navigation_bar.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String? userFullName;
+  final String? userAvatarPath;
+
+  const HomeScreen({super.key, this.userFullName, this.userAvatarPath});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-enum _SelectedTab { home, favorite, search, person }
-
 class _HomeScreenState extends State<HomeScreen> {
-  _SelectedTab _selectedTab = _SelectedTab.home;
+  // 1. CAMBIO DE ESTADO: Usamos un índice entero en lugar de un enum
+  int _selectedIndex = 0;
+  late final PageController _pageController;
 
-  void _handleIndexChanged(int index) {
-    setState(() {
-      _selectedTab = _SelectedTab.values[index];
-    });
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
   }
 
-  Widget _getScreenForTab(_SelectedTab tab) {
-    switch (tab) {
-      case _SelectedTab.home:
-        return Center(
-          child: Text("Menú de opciones", style: TextStyle(fontSize: 20)),
-        );
-      case _SelectedTab.favorite:
-        return Center(child: Text("Favoritos", style: TextStyle(fontSize: 20)));
-      case _SelectedTab.search:
-        return Center(child: Text("Buscar", style: TextStyle(fontSize: 20)));
-      case _SelectedTab.person:
-        return Center(child: Text("Perfil", style: TextStyle(fontSize: 20)));
-    }
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // 2. LISTA DE PANTALLAS: Reemplaza al método _getScreenForTab
+  List<Widget> _buildScreens() {
+    return [
+      // Pantalla de Inicio
+      Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Bienvenido, ${widget.userFullName ?? 'Usuario'}!",
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 20),
+            const Text("Menú de opciones", style: TextStyle(fontSize: 20)),
+          ],
+        ),
+      ),
+      // Pantalla de Favoritos
+      const Center(child: Text("Favoritos", style: TextStyle(fontSize: 20))),
+      // Pantalla de Búsqueda
+      const Center(child: Text("Buscar", style: TextStyle(fontSize: 20))),
+      // Pantalla de Perfil
+      const Center(child: Text("Perfil", style: TextStyle(fontSize: 20))),
+    ];
+  }
+
+  // 3. NUEVA FUNCIÓN DE TAP: Actualiza el índice y controla el PageController
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.ease,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
+        title: Text(widget.userFullName ?? 'Inicio'),
         backgroundColor: Colors.blue,
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.grey.shade300,
+              backgroundImage:
+                  widget.userAvatarPath != null &&
+                      File(widget.userAvatarPath!).existsSync()
+                  ? FileImage(File(widget.userAvatarPath!))
+                  : null,
+              child:
+                  widget.userAvatarPath == null ||
+                      !File(widget.userAvatarPath!).existsSync()
+                  ? const Icon(Icons.person, size: 25, color: Colors.white)
+                  : null,
+            ),
+          ),
           ValueListenableBuilder<bool>(
             valueListenable: ValueListener.isDark,
             builder: (context, isDarkMode, child) {
@@ -73,33 +109,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      endDrawer: Drawer(),
-      body: _getScreenForTab(_selectedTab),
-      bottomNavigationBar: SafeArea(
-        child: DotNavigationBar(
-          margin: EdgeInsets.symmetric(horizontal: 10),
-          currentIndex: _SelectedTab.values.indexOf(_selectedTab),
-          dotIndicatorColor: Colors.white,
-          unselectedItemColor: Colors.grey[300],
-          splashBorderRadius: 50,
-          onTap: _handleIndexChanged,
+      endDrawer: const Drawer(),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: _buildScreens(),
+      ),
+
+      // SOLUCIÓN CORRECTA AQUÍ
+      bottomNavigationBar: Container(
+        height: 110.0, // <-- AQUÍ ESTÁ LA CORRECCIÓN
+        child: TranslucentNavigationBar(
+          selectedIndex: _selectedIndex,
+          onTap: _onItemTapped,
           items: [
-            DotNavigationBarItem(
-              icon: Icon(Icons.home),
-              selectedColor: Color(0xff73544C),
+            TranslucentNavigationBarItem(iconData: PhosphorIcons.houseBold),
+            TranslucentNavigationBarItem(iconData: PhosphorIcons.heartBold),
+            TranslucentNavigationBarItem(
+              iconData: PhosphorIcons.magnifyingGlassBold,
             ),
-            DotNavigationBarItem(
-              icon: Icon(Icons.favorite),
-              selectedColor: Color(0xff73544C),
-            ),
-            DotNavigationBarItem(
-              icon: Icon(Icons.search),
-              selectedColor: Color(0xff73544C),
-            ),
-            DotNavigationBarItem(
-              icon: Icon(Icons.person),
-              selectedColor: Color(0xff73544C),
-            ),
+            TranslucentNavigationBarItem(iconData: PhosphorIcons.userBold),
           ],
         ),
       ),

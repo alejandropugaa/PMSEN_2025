@@ -1,9 +1,7 @@
-// lib/screens/register_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:email_validator/email_validator.dart';
-// No necesitas importar la base de datos para esta implementación sin BD
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -18,11 +16,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  File? _avatarImage; // Para almacenar la imagen seleccionada
-  bool _isLoading = false; // Para mostrar un spinner durante el registro
-  bool _isPasswordVisible = false; // Para mostrar/ocultar la contraseña
+  File? _avatarImage;
+  bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
-  // Función para seleccionar imagen
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
@@ -39,7 +36,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // Diálogo para elegir origen de la imagen
   void _showImageSourceActionSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -71,29 +67,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Función para registrar usuario
   Future<void> _registerUser() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      // NO SE USA BASE DE DATOS, solo se simula el registro y se devuelven los datos.
       try {
-        await Future.delayed(
-          const Duration(seconds: 2),
-        ); // Simular tiempo de guardado
+        await Future.delayed(const Duration(seconds: 2));
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario registrado exitosamente!')),
         );
 
-        // Devolver los datos del usuario recién registrado
         Navigator.pop(context, {
           'fullName': _fullNameController.text,
           'email': _emailController.text,
           'password': _passwordController.text,
-          'avatarPath': _avatarImage?.path, // Ruta de la imagen seleccionada
+          'avatarPath': _avatarImage?.path,
         });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -127,7 +118,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 key: _formKey,
                 child: Column(
                   children: <Widget>[
-                    // Avatar del usuario
                     GestureDetector(
                       onTap: () => _showImageSourceActionSheet(context),
                       child: CircleAvatar(
@@ -147,7 +137,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Nombre completo
                     TextFormField(
                       controller: _fullNameController,
                       decoration: const InputDecoration(
@@ -164,7 +153,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 15),
 
-                    // Email de usuario
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -185,7 +173,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 15),
 
-                    // Password del usuario
                     TextFormField(
                       controller: _passwordController,
                       obscureText: !_isPasswordVisible,
@@ -218,7 +205,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    // Botón de registro
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
